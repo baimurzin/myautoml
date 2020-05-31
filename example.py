@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 
 from myautoml import AutoML
 from myautoml.data.datacontainer import DataContainer
+from myautoml.model.modelregistryholder import ModelRegistryHolder
 
 le = preprocessing.LabelEncoder()
 if __name__ == '__main__':

@@ -15,14 +15,25 @@ from myautoml.model.regression.regressorfactory import RegressorFactory
 class AutoML:
 
     def __init__(self,
+                 X_train=None,
+                 y_train=None,
+                 X_test=None,
+                 y_test=None,
                  data: DataContainer = None,
                  processes: int = 1,
                  verbose: bool = False,
                  estimator: AbstractModelFactory = None,
-                 model:Optional = None) -> None:
+                 model:Optional = None,
+                 clean_data = False):
+        if data is None:
+            self.data = DataContainer(X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test)
+            #add option to load from path todo
+        else:
+            self.data = data
+        if clean_data:
+            self.data.clean_data()
         self.model = model
         self.verbose = verbose
-        self.data = data
         self.processes = processes
         self._automl_list: Optional[List] = [] #list of model objects to run in parallel
         if estimator is None:
@@ -30,9 +41,10 @@ class AutoML:
         else:
             self.estimator = estimator
         if model is None:
-            self.model = self.set_default_model(estimator)
+            self.model = self.set_default_model()
         else:
             self.model = model
+
 
     def _init_model(self, model:AbstractModelFactory):
         self.model = model
@@ -87,5 +99,5 @@ class AutoML:
     def _fit(automl, **kwargs):
         return automl.fit(**kwargs)
 
-    def set_default_model(self, estimator):
+    def set_default_model(self):
         return self.estimator.create_logreg()

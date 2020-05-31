@@ -114,3 +114,7 @@ class DataContainer(object):
                     data[nan_column + 'isNAN'] = pd.isna(data[nan_column]).astype('uint8')
                 data.fillna(data.median(), inplace=True)
         return data
+
+    def clean_data(self):
+        #implement
+        pass
