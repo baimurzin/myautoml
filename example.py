@@ -14,14 +14,13 @@ if __name__ == '__main__':
     print(X_train.shape, X_test.shape, y_train.shape, y_test.shape)
 
 
-    ### encoding target
+    ### encoding target step
 
     data = DataContainer(X_train=X_train,
                   X_test=X_test,
                   y_train=y_train,
                   y_test=y_test)
 
-    a = AutoML()
-    a.fit(data)
-
-    # print(ModelRegistryHolder.REGISTRY)
+    #we can pass data, or path, or dataframe in future
+    a = AutoML(data=data)
+    a.fit()

@@ -4,39 +4,46 @@ import multiprocessing
 from typing import Optional, List
 
 from myautoml.data.datacontainer import DataContainer
-from myautoml.estimator import BaseEstimator
-from myautoml.estimator import Classifier
 
 import joblib
+
+from myautoml.model.abstractmodelfactory import AbstractModelFactory
+from myautoml.model.classification.classifierfactory import ClassifierFactory
+from myautoml.model.regression.regressorfactory import RegressorFactory
 
 
 class AutoML:
 
-    def __init__(self, estimator: BaseEstimator = None,
+    def __init__(self,
+                 data: DataContainer = None,
                  processes: int = 1,
                  verbose: bool = False,
-                 model = None) -> None:
+                 estimator: AbstractModelFactory = None,
+                 model:Optional = None) -> None:
         self.model = model
         self.verbose = verbose
+        self.data = data
         self.processes = processes
-        self._estimator = estimator
-        self._automl_list: Optional[List] = []
+        self._automl_list: Optional[List] = [] #list of model objects to run in parallel
+        if estimator is None:
+            self.estimator = self.detect_estimator(data.y_train)
+        else:
+            self.estimator = estimator
+        if model is None:
+            self.model = self.set_default_model(estimator)
+        else:
+            self.model = model
 
-    @property
-    def estimator(self) -> BaseEstimator:
-        return self._estimator
+    def _init_model(self, model:AbstractModelFactory):
+        self.model = model
 
-    @estimator.setter
-    def estimator(self, estimator: BaseEstimator) -> None:
-        self._estimator = estimator
 
-    def fit(self, data:DataContainer = None, **kwargs):
+    def fit(self, **kwargs):
         self._automl_list = []
-        detected_est = self.detect_estimator(data.y_train)
-        self.estimator = detected_est
+        data = self.data
 
         if self.processes == 1:
-            self.estimator.fit(data.X_train, data.y_train)
+            self.model.fit(data.X_train, data.y_train)
         else:
             pass
             #do multiprocessing: create automl objects for each process
@@ -63,18 +70,22 @@ class AutoML:
         return self
 
 
-    def fit_predict(self):
+    def fit_predict(self, data: DataContainer):
         print('starting working')
-        self._estimator.fit(dataset='')
-        result = self._estimator.predict('')
+        self.model.fit(data.X_train, data.y_train)
+        result = self.model.predict(data.X_test)
+        return result
 
     @staticmethod
-    def detect_estimator(target) -> BaseEstimator:
+    def detect_estimator(target) -> AbstractModelFactory:
         if (target.dtype == object) | (target.dtype == 'int'):
-            return Classifier()
+            return ClassifierFactory()
         else:
-            pass
+            return RegressorFactory()
 
     @staticmethod
     def _fit(automl, **kwargs):
         return automl.fit(**kwargs)
+
+    def set_default_model(self, estimator):
+        return self.estimator.create_logreg()
